@@ -133,7 +133,7 @@ footer a{color:var(--accent)}
       <label class="target" for="tAP">เกณฑ์ไม่เกิน <input id="tAP" type="number" min="1" value="90"> วัน</label>
     </div>
     <div class="cards" id="apCards"></div>
-    <p class="note">สูตร: เจ้าหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันของเดือนที่นำเข้า ÷ ยอดตั้งหนี้ (ด้านเครดิต) รวมของเดือนที่นำเข้า. ถ้านำเข้าครบตั้งแต่ ต.ค. จะเท่ากับตั้งหนี้สะสมทั้งปี; นำเข้าเดือนเดียวจะคิดจากยอดตั้งหนี้ของเดือนนั้น</p>
+    <p class="note">สูตร (ประมาณการ): เจ้าหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ ยอดใช้ไปสะสมของหมวดเดียวกัน (ยอดยกไปของบัญชีใช้ไป) ใช้ยอดใช้ไปแทนยอดซื้อ จึงคำนวณได้จากไฟล์เดือนเดียว. คู่บัญชี: ยา ↔ ยาใช้ไป, วัสดุการแพทย์ทั่วไป ↔ วัสดุทางการแพทย์ทั่วไปใช้ไป, วัสดุวิทยาศาสตร์ฯ ↔ วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป, วัสดุเภสัชกรรม ↔ วัสดุเภสัชกรรมใช้ไป, วัสดุทันตกรรม ↔ วัสดุทันตกรรมใช้ไป</p>
   </section>
 
   <section id="sec-band">
@@ -190,11 +190,11 @@ const BAND=[
  {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.136',name:'เจ้าหนี้ - วัสดุวิทยาศาสตร์และการแพทย์',base:'5104030205.104',baseName:'วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป'},
 ];
 const AP=[
- {t:'เจ้าหนี้ - ยา',ap:'2101020199.134'},
- {t:'เจ้าหนี้ - วัสดุการแพทย์ทั่วไป',ap:'2101020199.135'},
- {t:'เจ้าหนี้ - วัสดุวิทยาศาสตร์และการแพทย์',ap:'2101020199.136'},
- {t:'เจ้าหนี้ - วัสดุเภสัชกรรม',ap:'2101020199.143'},
- {t:'เจ้าหนี้ - วัสดุทันตกรรม',ap:'2101020199.144'},
+ {t:'เจ้าหนี้ - ยา',ap:'2101020199.134',use:'5104030205.101',useName:'ยาใช้ไป'},
+ {t:'เจ้าหนี้ - วัสดุการแพทย์ทั่วไป',ap:'2101020199.135',use:'5104030205.103',useName:'วัสดุทางการแพทย์ทั่วไปใช้ไป'},
+ {t:'เจ้าหนี้ - วัสดุวิทยาศาสตร์และการแพทย์',ap:'2101020199.136',use:'5104030205.104',useName:'วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป'},
+ {t:'เจ้าหนี้ - วัสดุเภสัชกรรม',ap:'2101020199.143',use:'5104030205.102',useName:'วัสดุเภสัชกรรมใช้ไป'},
+ {t:'เจ้าหนี้ - วัสดุทันตกรรม',ap:'2101020199.144',use:'5104030205.117',useName:'วัสดุทันตกรรมใช้ไป'},
 ];
 // rule kinds: cf0 = ยอดยกไปต้องเท่ากับ 0, dr = ต้องมีเดบิต, cr = ต้องมีเครดิต, drcr = ต้องมีทั้งเดบิตและเครดิต
 const RULES=[
@@ -286,8 +286,8 @@ function series(kind,c){
       out.push({bal:a?a.cf:null,base:y,mon:r?(r.cr-r.dr):null,d:a&&y>EPS?a.cf*DAYS[i]/y:null});}
     else if(kind==='inv'){const a=m(c.inv,i),u=m(c.use,i);const y=u?u.cf:0; // ใช้ไปยอดยกไป = สะสมตั้งแต่ต้นปีงบ
       out.push({bal:a?a.cf:null,base:y,mon:u?(u.dr-u.cr):null,d:a&&y>EPS?a.cf*DAYS[i]/y:null});}
-    else{const a=m(c.ap,i);ytd+=a?a.cr:0; // ตั้งหนี้สะสมจากเดือนที่มีข้อมูล ÷ จำนวนวันของเดือนเหล่านั้น
-      out.push({bal:a?a.cf:null,base:ytd,mon:a?a.cr:null,paid:a?a.dr:null,d:a&&ytd>EPS?a.cf*LDAYS[i]/ytd:null});}
+    else{const a=m(c.ap,i),u=m(c.use,i);const y=u?u.cf:0; // ใช้ไปยอดยกไป = สะสมตั้งแต่ต้นปีงบ (ประมาณการยอดซื้อ)
+      out.push({bal:a?a.cf:null,base:y,mon:a?a.cr:null,paid:a?a.dr:null,d:a&&y>EPS?a.cf*DAYS[i]/y:null});}
   }
   return out;
 }
@@ -365,9 +365,9 @@ function render(){
   document.getElementById('apCards').innerHTML=apS.map(({c,s})=>{const p=s[SEL]||{};const lv=level(p.d,tAP);
     return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(c.t)}</span><span class="pill ${lv}">${LV[lv]}</span></div>
      <div class="big"><span class="num">${fmt(p.d,0)}</span><span class="u">วัน</span></div>
-     <dl class="kv"><dt>เจ้าหนี้ยกไป</dt><dd>${fmt(p.bal)}</dd><dt>ตั้งหนี้เดือนนี้ (Cr)</dt><dd>${fmt(p.mon)}</dd><dt>ชำระเดือนนี้ (Dr)</dt><dd>${fmt(p.paid)}</dd><dt>ตั้งหนี้สะสม</dt><dd>${fmt(p.base)}</dd></dl>
+     <dl class="kv"><dt>เจ้าหนี้ยกไป</dt><dd>${fmt(p.bal)}</dd><dt>ตั้งหนี้เดือนนี้ (Cr)</dt><dd>${fmt(p.mon)}</dd><dt>ชำระเดือนนี้ (Dr)</dt><dd>${fmt(p.paid)}</dd><dt>${esc(c.useName)}สะสม</dt><dd>${fmt(p.base)}</dd></dl>
      ${spark(s,tAP)}
-     <div class="codes">${c.ap}</div></article>`;}).join('');
+     <div class="codes">${c.ap} เจ้าหนี้<br>${c.use} ใช้ไป</div></article>`;}).join('');
 
   document.getElementById('invCards').innerHTML=invS.map(({c,s})=>{const p=s[SEL]||{};const lv=level(p.d,tINV);
     return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(c.t)}</span><span class="pill ${lv}">${LV[lv]}</span></div>
