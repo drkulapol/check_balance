@@ -112,10 +112,19 @@ footer a{color:var(--accent)}
   <section id="sec-ar">
     <div class="sechead">
       <h2>ระยะเวลาเก็บหนี้ (วัน)</h2>
-      <label class="target" for="tAR">เกณฑ์ไม่เกิน <input id="tAR" type="number" min="1" value="60"> วัน</label>
+      <span class="target">เกณฑ์ตามสิทธิ: UC และข้าราชการ ≤ 60 วัน · ประกันสังคม ≤ 120 วัน</span>
     </div>
     <div class="cards" id="arCards"></div>
     <p class="note">สูตร: ลูกหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ รายได้สะสมตั้งแต่ต้นปีงบ (เครดิต − เดบิต ของบัญชีรายได้). กราฟแสดงแนวโน้มทั้งปี, เส้นประคือเกณฑ์, จุดเข้มคือเดือนที่เลือก</p>
+  </section>
+
+  <section id="sec-inv">
+    <div class="sechead">
+      <h2>วันคงคลัง (วัน)</h2>
+      <label class="target" for="tINV">เกณฑ์ไม่เกิน <input id="tINV" type="number" min="1" value="60"> วัน</label>
+    </div>
+    <div class="cards" id="invCards"></div>
+    <p class="note">สูตร: ยอดคงคลังยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ ยอดใช้ไปสะสมตั้งแต่ต้นปีงบ (เดบิต − เครดิต ของบัญชีใช้ไป)</p>
   </section>
 
   <section id="sec-ap">
@@ -125,6 +134,15 @@ footer a{color:var(--accent)}
     </div>
     <div class="cards" id="apCards"></div>
     <p class="note">สูตร: เจ้าหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ ยอดตั้งหนี้สะสม (ด้านเครดิตของบัญชีเจ้าหนี้) ตั้งแต่ต้นปีงบ</p>
+  </section>
+
+  <section id="sec-band">
+    <div class="sechead">
+      <h2>ความผิดปกติของยอดรายเดือน</h2>
+      <span class="target">ช่วงปกติ 50%–150% ของค่าเฉลี่ย</span>
+    </div>
+    <div class="cards" id="bandCards"></div>
+    <p class="note">ค่าเฉลี่ยของแต่ละเดือนคำนวณจากเดือนอื่นที่มีข้อมูลในปีงบเดียวกัน (ไม่นับเดือนที่ตรวจ เพื่อไม่ให้ยอดผิดปกติดึงค่าเฉลี่ยของตัวเอง). รายจ่ายใช้ เดบิต − เครดิต ของเดือน, เจ้าหนี้ใช้ยอดตั้งหนี้ (เครดิต) ของเดือน. แถบสีอ่อนคือช่วงปกติของเดือนที่เลือก</p>
   </section>
 
   <section id="sec-chk">
@@ -151,11 +169,25 @@ const EPS=0.005;
 const CONTRA=/^ค่าเผื่อ|ค่าเสื่อมราคาสะสม|ค่าตัดจำหน่ายสะสม/;
 
 const AR=[
- {t:'UC - IP',ar:'1102050101.202',rev:'4301020105.202'},
- {t:'ข้าราชการ (กรมบัญชีกลาง) OP',ar:'1102050101.401',rev:'4301020104.401'},
- {t:'ข้าราชการ (กรมบัญชีกลาง) IP',ar:'1102050101.402',rev:'4301020104.402'},
- {t:'ประกันสังคม OP - เครือข่าย',ar:'1102050101.301',rev:'4301020106.305'},
- {t:'ประกันสังคม IP - เครือข่าย',ar:'1102050101.302',rev:'4301020106.306'},
+ {t:'UC - IP',ar:'1102050101.202',rev:'4301020105.202',tgt:60},
+ {t:'ข้าราชการ (กรมบัญชีกลาง) OP',ar:'1102050101.401',rev:'4301020104.401',tgt:60},
+ {t:'ข้าราชการ (กรมบัญชีกลาง) IP',ar:'1102050101.402',rev:'4301020104.402',tgt:60},
+ {t:'ประกันสังคม OP - เครือข่าย',ar:'1102050101.301',rev:'4301020106.305',tgt:120},
+ {t:'ประกันสังคม IP - เครือข่าย',ar:'1102050101.302',rev:'4301020106.306',tgt:120},
+];
+const INV=[
+ {t:'ยา',inv:'1105010103.102',use:'5104030205.101'},
+ {t:'วัสดุวิทยาศาสตร์และการแพทย์',inv:'1105010103.105',use:'5104030205.104'},
+ {t:'วัสดุการแพทย์ทั่วไป',inv:'1105010103.104',use:'5104030205.103'},
+];
+// ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ยเดือนอื่นที่มีข้อมูล; mode exp = เดบิต−เครดิต, cr = ยอดตั้งหนี้ (เครดิต)
+const BAND_LO=0.5, BAND_HI=1.5;
+const BAND=[
+ {g:'รายจ่ายประจำ: ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย',mode:'exp',code:'5104030205.101',name:'ยาใช้ไป'},
+ {g:'รายจ่ายประจำ: ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย',mode:'exp',code:'5104030205.104',name:'วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป'},
+ {g:'รายจ่ายประจำ: ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย',mode:'exp',code:'5104010110.101',name:'ค่าเชื้อเพลิง'},
+ {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.134',name:'เจ้าหนี้ - ยา'},
+ {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.136',name:'เจ้าหนี้ - วัสดุวิทยาศาสตร์และการแพทย์'},
 ];
 const AP=[
  {t:'เจ้าหนี้ - ยา',ap:'2101020199.134'},
@@ -223,9 +255,24 @@ function runChecks(){
       items.push({g:R.g,code,name,res});
     }
   }
+  for(const B of BAND){
+    const name=IDX[B.code]?IDX[B.code][1]:B.name;const s=bandSeries(B);
+    const res=MONTHS.map((_,i)=>{if(!ACTIVE[i])return null;
+      if(!IDX[B.code])return{ok:false,why:'ไม่พบรหัสบัญชีในงบทดลอง',x:null};
+      const p=s[i];if(!p||p.pct==null)return null;
+      const ok=p.pct>=BAND_LO&&p.pct<=BAND_HI;
+      return{ok,why:ok?'':(p.pct>BAND_HI?'สูงกว่าปกติ ':'ต่ำกว่าปกติ ')+fmt(p.pct*100,0)+'% ของค่าเฉลี่ย'+(B.mode==='cr'?(p.pct>BAND_HI?' (อาจรับรู้หนี้ซ้ำซ้อน/สะสมจากเดือนก่อน)':' (อาจรับรู้หนี้ล่าช้า)'):''),band:p,x:m(B.code,i)};});
+    items.push({g:B.g,code:B.code,name,res,band:true});
+  }
   return items;
 }
 
+function bandSeries(B){
+  const amt=MONTHS.map((_,i)=>{if(!ACTIVE[i])return null;const x=m(B.code,i);if(!x)return null;return B.mode==='exp'?x.dr-x.cr:x.cr;});
+  return amt.map((v,i)=>{if(v==null)return null;
+    const oth=amt.filter((w,j)=>j!==i&&w!=null);const avg=oth.length?oth.reduce((a,b)=>a+b,0)/oth.length:null;
+    const pct=avg&&avg>EPS?v/avg:null;return{v,avg,pct};});
+}
 function failsIn(i){let n=0;for(const it of CHK){const r=it.res[i];if(r&&!r.ok)n+=it.agg?r.bad.length:1;}return n;}
 
 function series(kind,c){
@@ -234,12 +281,14 @@ function series(kind,c){
   for(let i=0;i<12;i++){
     if(kind==='ar'){const a=m(c.ar,i),r=m(c.rev,i);ytd+=r?(r.cr-r.dr):0;
       out.push(ACTIVE[i]?{bal:a?a.cf:null,base:ytd,mon:r?(r.cr-r.dr):null,d:a&&ytd>EPS?a.cf*DAYS[i]/ytd:null}:null);}
+    else if(kind==='inv'){const a=m(c.inv,i),u=m(c.use,i);const mu=u?(u.dr-u.cr):null;ytd+=mu||0;
+      out.push(ACTIVE[i]?{bal:a?a.cf:null,base:ytd,mon:mu,d:a&&ytd>EPS?a.cf*DAYS[i]/ytd:null}:null);}
     else{const a=m(c.ap,i);ytd+=a?a.cr:0;
       out.push(ACTIVE[i]?{bal:a?a.cf:null,base:ytd,mon:a?a.cr:null,paid:a?a.dr:null,d:a&&ytd>EPS?a.cf*DAYS[i]/ytd:null}:null);}
   }
   return out;
 }
-function level(d,t){if(d==null)return'na';if(d<=t)return'ok';if(d<=t*1.5)return'over';return'far';}
+function level(d,t){if(d==null)return'na';d=Math.round(d);if(d<=t)return'ok';if(d<=t*1.5)return'over';return'far';}
 const LV={ok:'ผ่านเกณฑ์',over:'เกินเกณฑ์',far:'เกินเกณฑ์มาก',na:'คำนวณไม่ได้'};
 
 function spark(s,t){
@@ -267,29 +316,47 @@ function spark(s,t){
   </svg>`;
 }
 
+function bars(s){
+  const W=260,H=74,pl=4,pr=4,pt=6,pb=14;
+  const vals=s.map(p=>p?p.v:null);const sp=s[SEL];
+  const mx=Math.max(...vals.filter(v=>v!=null).map(v=>Math.max(v,0)),sp&&sp.avg?sp.avg*BAND_HI:0,1)*1.05;
+  const bw=(W-pl-pr)/12, Y=v=>pt+(H-pt-pb)*(1-Math.max(v,0)/mx);
+  let band='';if(sp&&sp.avg>EPS){band=`<rect x="${pl}" y="${Y(sp.avg*BAND_HI)}" width="${W-pl-pr}" height="${Y(sp.avg*BAND_LO)-Y(sp.avg*BAND_HI)}" fill="var(--good)" fill-opacity=".10"/>
+    <line x1="${pl}" x2="${W-pr}" y1="${Y(sp.avg)}" y2="${Y(sp.avg)}" stroke="var(--good)" stroke-width="1" stroke-dasharray="3 3"/>`;}
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="ยอดรายเดือนเทียบช่วงปกติ">${band}
+   <line x1="${pl}" x2="${W-pr}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--line)" stroke-width="1"/>
+   ${s.map((p,i)=>{if(!p)return'';const out=p.pct!=null&&(p.pct<BAND_LO||p.pct>BAND_HI);const y=Y(p.v);
+     return `<rect x="${(pl+i*bw+bw*.18).toFixed(1)}" y="${y.toFixed(1)}" width="${(bw*.64).toFixed(1)}" height="${Math.max(Y(0)-y,0.5).toFixed(1)}" rx="1.5" fill="${out?'var(--bad)':'var(--accent)'}" fill-opacity="${i===SEL?1:.55}"><title>${MONTHS_FULL[i]}: ${fmt(p.v)}${p.pct!=null?' ('+fmt(p.pct*100,0)+'%)':''}</title></rect>`;}).join('')}
+   <text x="${pl+bw/2}" y="${H-3}" font-size="9" fill="var(--muted)" text-anchor="middle">ต.ค.</text>
+   <text x="${pl+bw*11.5}" y="${H-3}" font-size="9" fill="var(--muted)" text-anchor="middle">ก.ย.</text>
+  </svg>`;
+}
+
 function render(){
-  const tAR=+document.getElementById('tAR').value||60, tAP=+document.getElementById('tAP').value||90;
+  const tAP=+document.getElementById('tAP').value||90, tINV=+document.getElementById('tINV').value||60;
   // month rail
   document.getElementById('rail').innerHTML='<span class="lbl">เดือน</span>'+MONTHS.map((mn,i)=>{
     const f=ACTIVE[i]?failsIn(i):0;
     return `<button class="mchip" data-i="${i}" aria-pressed="${i===SEL}" ${ACTIVE[i]?'':'disabled'} title="${ACTIVE[i]?(f?f+' รายการไม่ผ่าน':'ผ่านทุกเงื่อนไข'):'ไม่มีข้อมูล'}">${ACTIVE[i]?`<span class="dot ${f?'bad':''}"></span>`:''}${mn}</button>`;}).join('');
   document.querySelectorAll('.mchip').forEach(b=>b.onclick=()=>{SEL=+b.dataset.i;render();});
 
-  const arS=AR.map(c=>({c,s:series('ar',c)})), apS=AP.map(c=>({c,s:series('ap',c)}));
+  const arS=AR.map(c=>({c,s:series('ar',c)})), apS=AP.map(c=>({c,s:series('ap',c)})), invS=INV.map(c=>({c,s:series('inv',c)}));
   const fails=failsIn(SEL);
-  const arOver=arS.filter(o=>{const p=o.s[SEL];return p&&p.d!=null&&p.d>tAR;}).length;
+  const arOver=arS.filter(o=>{const p=o.s[SEL];return p&&p.d!=null&&p.d>o.c.tgt;}).length;
+  const invOver=invS.filter(o=>{const p=o.s[SEL];return p&&p.d!=null&&p.d>tINV;}).length;
   const apOver=apS.filter(o=>{const p=o.s[SEL];return p&&p.d!=null&&p.d>tAP;}).length;
   document.getElementById('summary').innerHTML=`
    <div class="stat"><span class="k">เดือนที่เลือก</span><span class="v" style="font-family:var(--f-display)">${MONTHS_FULL[SEL]}</span><span class="k">วันสะสมตั้งแต่ 1 ต.ค.: <span class="num">${DAYS[SEL]}</span> วัน</span></div>
    <div class="stat"><span class="k">รายการตรวจที่ไม่ผ่าน</span><span class="v" style="color:${fails?'var(--bad)':'var(--good)'}">${fails}</span><span class="k">จาก ${CHK.length-2} บัญชีที่กำหนด + สินทรัพย์หมุนเวียนและหนี้สินทุกบัญชี</span></div>
-   <div class="stat"><span class="k">ลูกหนี้ที่เก็บหนี้เกิน ${tAR} วัน</span><span class="v" style="color:${arOver?'var(--warn)':'var(--good)'}">${arOver} / ${AR.length}</span><span class="k">สิทธิ</span></div>
-   <div class="stat"><span class="k">เจ้าหนี้ที่ชำระเกิน ${tAP} วัน</span><span class="v" style="color:${apOver?'var(--warn)':'var(--good)'}">${apOver} / ${AP.length}</span><span class="k">หมวด</span></div>`;
+   <div class="stat"><span class="k">ลูกหนี้ที่เก็บหนี้เกินเกณฑ์</span><span class="v" style="color:${arOver?'var(--warn)':'var(--good)'}">${arOver} / ${AR.length}</span><span class="k">สิทธิ</span></div>
+   <div class="stat"><span class="k">เจ้าหนี้ที่ชำระเกิน ${tAP} วัน</span><span class="v" style="color:${apOver?'var(--warn)':'var(--good)'}">${apOver} / ${AP.length}</span><span class="k">หมวด</span></div>
+   <div class="stat"><span class="k">คงคลังเกิน ${tINV} วัน</span><span class="v" style="color:${invOver?'var(--warn)':'var(--good)'}">${invOver} / ${INV.length}</span><span class="k">รายการ</span></div>`;
 
-  document.getElementById('arCards').innerHTML=arS.map(({c,s})=>{const p=s[SEL]||{};const lv=level(p.d,tAR);
-    return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(c.t)}</span><span class="pill ${lv}">${LV[lv]}</span></div>
+  document.getElementById('arCards').innerHTML=arS.map(({c,s})=>{const p=s[SEL]||{};const lv=level(p.d,c.tgt);
+    return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(c.t)}<br><span class="sub" style="font-weight:400;font-size:12px">เกณฑ์ ≤ ${c.tgt} วัน</span></span><span class="pill ${lv}">${LV[lv]}</span></div>
      <div class="big"><span class="num">${fmt(p.d,0)}</span><span class="u">วัน</span></div>
      <dl class="kv"><dt>ลูกหนี้ยกไป</dt><dd>${fmt(p.bal)}</dd><dt>รายได้เดือนนี้</dt><dd>${fmt(p.mon)}</dd><dt>รายได้สะสม</dt><dd>${fmt(p.base)}</dd></dl>
-     ${spark(s,tAR)}
+     ${spark(s,c.tgt)}
      <div class="codes">${c.ar} ลูกหนี้<br>${c.rev} รายได้</div></article>`;}).join('');
 
   document.getElementById('apCards').innerHTML=apS.map(({c,s})=>{const p=s[SEL]||{};const lv=level(p.d,tAP);
@@ -299,14 +366,30 @@ function render(){
      ${spark(s,tAP)}
      <div class="codes">${c.ap}</div></article>`;}).join('');
 
+  document.getElementById('invCards').innerHTML=invS.map(({c,s})=>{const p=s[SEL]||{};const lv=level(p.d,tINV);
+    return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(c.t)}</span><span class="pill ${lv}">${LV[lv]}</span></div>
+     <div class="big"><span class="num">${fmt(p.d,0)}</span><span class="u">วัน</span></div>
+     <dl class="kv"><dt>คงคลังยกไป</dt><dd>${fmt(p.bal)}</dd><dt>ใช้ไปเดือนนี้</dt><dd>${fmt(p.mon)}</dd><dt>ใช้ไปสะสม</dt><dd>${fmt(p.base)}</dd></dl>
+     ${spark(s,tINV)}
+     <div class="codes">${c.inv} คงคลัง<br>${c.use} ใช้ไป</div></article>`;}).join('');
+
+  document.getElementById('bandCards').innerHTML=BAND.map(B=>{const s=bandSeries(B);const p=s[SEL];
+    const lv=!p||p.pct==null?'na':(p.pct>=BAND_LO&&p.pct<=BAND_HI?'ok':'far');
+    const lab=!p||p.pct==null?'คำนวณไม่ได้':lv==='ok'?'ปกติ':(p.pct>BAND_HI?'สูงผิดปกติ':'ต่ำผิดปกติ');
+    return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(B.name)}${B.mode==='cr'?'<br><span class="sub" style="font-weight:400;font-size:12px">ยอดตั้งหนี้ (เครดิต)</span>':''}</span><span class="pill ${lv}">${lab}</span></div>
+     <div class="big"><span class="num">${p&&p.pct!=null?fmt(p.pct*100,0):'—'}</span><span class="u">% ของค่าเฉลี่ย</span></div>
+     <dl class="kv"><dt>เดือนนี้</dt><dd>${fmt(p?p.v:null)}</dd><dt>เฉลี่ยเดือนอื่น</dt><dd>${fmt(p?p.avg:null)}</dd></dl>
+     ${bars(s)}
+     <div class="codes">${B.code}</div></article>`;}).join('');
+
   // issues for selected month
   const iss=[];
   for(const it of CHK){const r=it.res[SEL];if(!r||r.ok)continue;
     if(it.agg){r.bad.forEach(b=>iss.push({g:it.g,code:b[0],name:b[1],why:(b[2+SEL*4]<-EPS?'ยอดยกมาติดลบ':'')+(b[2+SEL*4]<-EPS&&b[5+SEL*4]<-EPS?' และ ':'')+(b[5+SEL*4]<-EPS?'ยอดยกไปติดลบ':''),x:{bf:b[2+SEL*4],dr:b[3+SEL*4],cr:b[4+SEL*4],cf:b[5+SEL*4]}}));}
-    else iss.push({g:it.g,code:it.code,name:it.name,why:r.why,x:r.x});}
+    else iss.push({g:it.g,code:it.code,name:it.name,why:r.why,x:r.x,band:r.band});}
   document.getElementById('chkSub').textContent=`${MONTHS_FULL[SEL]}: ${iss.length?iss.length+' รายการไม่ผ่าน':'ผ่านทุกเงื่อนไข'}`;
   document.getElementById('issues').innerHTML=iss.length?iss.map(o=>`<div class="issue"><div><div class="why">${esc(o.why)}</div><div>${esc(o.name)} <span class="num" style="color:var(--muted);font-size:12px">${o.code}</span></div><div class="sub" style="font-size:12px">${esc(o.g)}</div></div>
-     <div class="vals">${o.x?`ยกมา ${fmt(o.x.bf)}<br>Dr ${fmt(o.x.dr)} · Cr ${fmt(o.x.cr)}<br>ยกไป ${fmt(o.x.cf)}`:'—'}</div></div>`).join('')
+     <div class="vals">${o.band?`เดือนนี้ ${fmt(o.band.v)}<br>เฉลี่ยเดือนอื่น ${fmt(o.band.avg)}<br>ช่วงปกติ ${fmt(o.band.avg*BAND_LO,0)} – ${fmt(o.band.avg*BAND_HI,0)}`:o.x?`ยกมา ${fmt(o.x.bf)}<br>Dr ${fmt(o.x.dr)} · Cr ${fmt(o.x.cr)}<br>ยกไป ${fmt(o.x.cf)}`:'—'}</div></div>`).join('')
     :`<div class="allpass">${MONTHS_FULL[SEL]}: ผ่านทุกเงื่อนไขที่กำหนด</div>`;
 
   // matrix
@@ -345,6 +428,6 @@ document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(!f)ret
     catch(err){msg.className='filemsg err';msg.textContent='อ่านไฟล์ไม่ได้: '+err.message+' (ใช้ไฟล์ tb_report จากระบบรายงานงบทดลอง)';}};
   rd.readAsArrayBuffer(f);e.target.value='';};
 document.getElementById('reset').onclick=()=>{load(DEFAULT);msg.className='filemsg';msg.textContent='ข้อมูลที่แสดง: tb_report_2569_11183.xlsx';document.getElementById('reset').hidden=true;};
-['tAR','tAP'].forEach(id=>document.getElementById(id).oninput=render);
+['tAP','tINV'].forEach(id=>document.getElementById(id).oninput=render);
 load(DEFAULT);
 </script>
