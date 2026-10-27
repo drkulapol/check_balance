@@ -98,10 +98,10 @@ footer a{color:var(--accent)}
       <span class="sub">ตรวจงบทดลองรายเดือน · ระยะเวลาเก็บหนี้ · ระยะเวลาชำระหนี้ · เงื่อนไขความถูกต้องรายบัญชี</span>
     </div>
     <div class="actions">
-      <input type="file" id="file" accept=".xlsx,.xls" hidden>
+      <input type="file" id="file" accept=".xlsx,.xls" multiple hidden>
       <button class="btn" id="pick">นำเข้าไฟล์งบทดลอง (.xlsx)</button>
       <button class="btn ghost" id="reset" hidden>กลับไปใช้ข้อมูลตัวอย่าง</button>
-      <span class="filemsg" id="filemsg">ข้อมูลที่แสดง: tb_report_2569_11183.xlsx</span>
+      <span class="filemsg" id="filemsg">ข้อมูลตัวอย่าง: โรงพยาบาลสองแคว ต.ค.–ก.ย. · เลือกไฟล์ financial_report รายเดือนได้หลายไฟล์พร้อมกัน</span>
     </div>
   </header>
 
@@ -115,7 +115,7 @@ footer a{color:var(--accent)}
       <span class="target">เกณฑ์ตามสิทธิ: UC และข้าราชการ ≤ 60 วัน · ประกันสังคม ≤ 120 วัน</span>
     </div>
     <div class="cards" id="arCards"></div>
-    <p class="note">สูตร: ลูกหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ รายได้สะสมตั้งแต่ต้นปีงบ (เครดิต − เดบิต ของบัญชีรายได้). กราฟแสดงแนวโน้มทั้งปี, เส้นประคือเกณฑ์, จุดเข้มคือเดือนที่เลือก</p>
+    <p class="note">สูตร: ลูกหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ รายได้สะสมตั้งแต่ต้นปีงบ (ยอดยกไปของบัญชีรายได้). กราฟแสดงแนวโน้มทั้งปี, เส้นประคือเกณฑ์, จุดเข้มคือเดือนที่เลือก</p>
   </section>
 
   <section id="sec-inv">
@@ -124,7 +124,7 @@ footer a{color:var(--accent)}
       <label class="target" for="tINV">เกณฑ์ไม่เกิน <input id="tINV" type="number" min="1" value="60"> วัน</label>
     </div>
     <div class="cards" id="invCards"></div>
-    <p class="note">สูตร: ยอดคงคลังยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ ยอดใช้ไปสะสมตั้งแต่ต้นปีงบ (เดบิต − เครดิต ของบัญชีใช้ไป)</p>
+    <p class="note">สูตร: ยอดคงคลังยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ ยอดใช้ไปสะสมตั้งแต่ต้นปีงบ (ยอดยกไปของบัญชีใช้ไป)</p>
   </section>
 
   <section id="sec-ap">
@@ -133,7 +133,7 @@ footer a{color:var(--accent)}
       <label class="target" for="tAP">เกณฑ์ไม่เกิน <input id="tAP" type="number" min="1" value="90"> วัน</label>
     </div>
     <div class="cards" id="apCards"></div>
-    <p class="note">สูตร: เจ้าหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันสะสมตั้งแต่ 1 ต.ค. ÷ ยอดตั้งหนี้สะสม (ด้านเครดิตของบัญชีเจ้าหนี้) ตั้งแต่ต้นปีงบ</p>
+    <p class="note">สูตร: เจ้าหนี้ยอดยกไป ณ สิ้นเดือน × จำนวนวันของเดือนที่นำเข้า ÷ ยอดตั้งหนี้ (ด้านเครดิต) รวมของเดือนที่นำเข้า. ถ้านำเข้าครบตั้งแต่ ต.ค. จะเท่ากับตั้งหนี้สะสมทั้งปี; นำเข้าเดือนเดียวจะคิดจากยอดตั้งหนี้ของเดือนนั้น</p>
   </section>
 
   <section id="sec-band">
@@ -208,7 +208,7 @@ const RULES=[
  {g:'ค่าตอบแทน ต้องมีเดบิต',k:'dr',codes:{'5104040102.101':'ค่าตอบแทนเงินเพิ่มพิเศษแพทย์ไม่ทำเวชปฏิบัติฯลฯ (บริการ)','5104040102.102':'ค่าตอบแทนเงินเพิ่มพิเศษทันตแพทย์ไม่ทำเวชปฏิบัติฯลฯ (บริการ)','5104040102.103':'ค่าตอบแทนเงินเพิ่มเภสัชกรไม่ทำเวชปฏิบัติฯ (บริการ)','5104040102.104':'ค่าตอบแทนในการปฏิบัติงานของเจ้าหน้าที่ (บริการ)','5104040102.105':'ค่าตอบแทนในการปฏิบัติงานของเจ้าหน้าที่ (สนับสนุน)'}},
 ];
 
-let D=null, IDX={}, ACTIVE=[], DAYS=[], SEL=0, CHK=null;
+let D=null, IDX={}, ACTIVE=[], DAYS=[], LDAYS=[], SEL=0, CHK=null, SRC=null;
 
 const fmt=(v,d=2)=>v==null||!isFinite(v)?'—':v.toLocaleString('th-TH',{minimumFractionDigits:d,maximumFractionDigits:d});
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -217,14 +217,15 @@ const nz=v=>Math.abs(v)>EPS;
 
 function load(d){
   D=d;IDX={};d.rows.forEach(r=>IDX[r[0]]=r);
-  ACTIVE=MONTHS.map((_,i)=>d.rows.some(r=>nz(r[3+i*4])||nz(r[4+i*4])));
+  ACTIVE=d.loaded?MONTHS.map((_,i)=>d.loaded.includes(i)):MONTHS.map((_,i)=>d.rows.some(r=>nz(r[3+i*4])||nz(r[4+i*4])));
   const y=parseInt((String(d.a1||'').match(/(25\d\d)/)||[])[1]||'2569',10);
   const g=y-543; // ปีงบ 2569 = 1 ต.ค. 2025 – 30 ก.ย. 2026
-  let acc=0;DAYS=[];
-  for(let i=0;i<12;i++){const mm=(9+i)%12,yy=i<3?g-1:g;acc+=new Date(yy,mm+1,0).getDate();DAYS.push(acc);}
+  let acc=0,lacc=0;DAYS=[];LDAYS=[];
+  for(let i=0;i<12;i++){const mm=(9+i)%12,yy=i<3?g-1:g;const md=new Date(yy,mm+1,0).getDate();acc+=md;if(ACTIVE[i])lacc+=md;DAYS.push(acc);LDAYS.push(lacc);}
   SEL=ACTIVE.lastIndexOf(true);if(SEL<0)SEL=0;
-  document.getElementById('fy').textContent=(d.a1||'').trim()||'ปีงบประมาณ';
-  document.getElementById('hosp').textContent=(d.a2||'').trim()||'ไม่พบชื่อโรงพยาบาลในเซลล์ A2';
+  const nAct=ACTIVE.filter(Boolean).length;
+  document.getElementById('fy').textContent=`ปีงบประมาณ ${y} · ข้อมูล ${nAct} เดือน`+(nAct&&nAct<12?` (${MONTHS.filter((_,i)=>ACTIVE[i]).join(' ')})`:'');
+  document.getElementById('hosp').textContent=(d.a2||'').trim()||'ไม่พบชื่อโรงพยาบาลในเซลล์ C8';
   CHK=runChecks();render();
 }
 
@@ -279,12 +280,13 @@ function series(kind,c){
   // returns arrays per month: bal, base(YTD denominator), days
   const out=[];let ytd=0;
   for(let i=0;i<12;i++){
-    if(kind==='ar'){const a=m(c.ar,i),r=m(c.rev,i);ytd+=r?(r.cr-r.dr):0;
-      out.push(ACTIVE[i]?{bal:a?a.cf:null,base:ytd,mon:r?(r.cr-r.dr):null,d:a&&ytd>EPS?a.cf*DAYS[i]/ytd:null}:null);}
-    else if(kind==='inv'){const a=m(c.inv,i),u=m(c.use,i);const mu=u?(u.dr-u.cr):null;ytd+=mu||0;
-      out.push(ACTIVE[i]?{bal:a?a.cf:null,base:ytd,mon:mu,d:a&&ytd>EPS?a.cf*DAYS[i]/ytd:null}:null);}
-    else{const a=m(c.ap,i);ytd+=a?a.cr:0;
-      out.push(ACTIVE[i]?{bal:a?a.cf:null,base:ytd,mon:a?a.cr:null,paid:a?a.dr:null,d:a&&ytd>EPS?a.cf*DAYS[i]/ytd:null}:null);}
+    if(!ACTIVE[i]){out.push(null);continue;}
+    if(kind==='ar'){const a=m(c.ar,i),r=m(c.rev,i);const y=r?r.cf:0; // รายได้ยอดยกไป = สะสมตั้งแต่ต้นปีงบ
+      out.push({bal:a?a.cf:null,base:y,mon:r?(r.cr-r.dr):null,d:a&&y>EPS?a.cf*DAYS[i]/y:null});}
+    else if(kind==='inv'){const a=m(c.inv,i),u=m(c.use,i);const y=u?u.cf:0; // ใช้ไปยอดยกไป = สะสมตั้งแต่ต้นปีงบ
+      out.push({bal:a?a.cf:null,base:y,mon:u?(u.dr-u.cr):null,d:a&&y>EPS?a.cf*DAYS[i]/y:null});}
+    else{const a=m(c.ap,i);ytd+=a?a.cr:0; // ตั้งหนี้สะสมจากเดือนที่มีข้อมูล ÷ จำนวนวันของเดือนเหล่านั้น
+      out.push({bal:a?a.cf:null,base:ytd,mon:a?a.cr:null,paid:a?a.dr:null,d:a&&ytd>EPS?a.cf*LDAYS[i]/ytd:null});}
   }
   return out;
 }
@@ -373,7 +375,7 @@ function render(){
      ${spark(s,tINV)}
      <div class="codes">${c.inv} คงคลัง<br>${c.use} ใช้ไป</div></article>`;}).join('');
 
-  document.getElementById('bandCards').innerHTML=BAND.map(B=>{const s=bandSeries(B);const p=s[SEL];
+  document.getElementById('bandCards').innerHTML=(ACTIVE.filter(Boolean).length<2?`<div class="note" style="grid-column:1/-1;background:var(--warn-bg);color:var(--warn);padding:8px 12px;border-radius:6px">ต้องมีข้อมูลอย่างน้อย 2 เดือนจึงจะหาค่าเฉลี่ยได้ นำเข้าไฟล์เดือนอื่นของโรงพยาบาลเดียวกันเพิ่มได้ (ควรมีหลายเดือนเพื่อให้ค่าเฉลี่ยเชื่อถือได้)</div>`:'')+BAND.map(B=>{const s=bandSeries(B);const p=s[SEL];
     const lv=!p||p.pct==null?'na':(p.pct>=BAND_LO&&p.pct<=BAND_HI?'ok':'far');
     const lab=!p||p.pct==null?'คำนวณไม่ได้':lv==='ok'?'ปกติ':(p.pct>BAND_HI?'สูงผิดปกติ':'ต่ำผิดปกติ');
     return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(B.name)}${B.mode==='cr'?'<br><span class="sub" style="font-weight:400;font-size:12px">ยอดตั้งหนี้ (เครดิต)</span>':''}</span><span class="pill ${lv}">${lab}</span></div>
@@ -407,27 +409,62 @@ function render(){
   document.getElementById('matrix').innerHTML=h+'</tbody>';
 }
 
-// file import
-function parseSheet(wb){
+// file import — แบบฟอร์ม financial_report (รายเดือน 1 ไฟล์ = 1 เดือน): A2 มี "เดือน : <ชื่อเดือน> ปีงบประมาณ : <ปี>", C7 รหัสหน่วยบริการ, C8 ชื่อโรงพยาบาล, ข้อมูลเริ่มแถว 10 (A รหัส L6, B ชื่อบัญชี, C ยกมา, D เดบิต, E เครดิต, F ยกไป)
+const num=v=>{const n=typeof v==='number'?v:parseFloat(String(v??'0').replace(/,/g,''));return isFinite(n)?n:0;};
+function parseFile(wb,fname){
   const ws=wb.Sheets[wb.SheetNames[0]];
-  const a=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null});
-  const rows=[];
-  for(const r of a){const code=r[0]==null?'':String(r[0]).trim();
-    if(!/^\d{10}\.\d{3}$/.test(code))continue;
-    const nums=[];for(let k=2;k<50;k++){const v=r[k];const n=typeof v==='number'?v:parseFloat(String(v??'0').replace(/,/g,''));nums.push(isFinite(n)?n:0);}
-    rows.push([code,String(r[1]??'').trim(),...nums]);}
-  if(!rows.length)throw new Error('ไม่พบแถวรหัสบัญชีรูปแบบ 0000000000.000 ในคอลัมน์ A');
-  return {a1:a[0]?a[0][0]:'',a2:a[1]?a[1][0]:'',rows};
+  const a=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,blankrows:true});
+  const cell=(r,c)=>a[r]&&a[r][c]!=null?String(a[r][c]).trim():'';
+  const isCode=s=>/^\d{10}\.\d{3}$/.test(s);
+  if(cell(7,0).toLowerCase()==='codel6'||cell(7,2)){
+    const hdr=cell(1,0);
+    const mn=(hdr.match(/เดือน\s*:\s*([^\s]+)/)||[])[1];const mi=MONTHS_FULL.indexOf(mn);
+    const fy=parseInt((hdr.match(/ปีงบประมาณ\s*:\s*(\d{4})/)||[])[1],10);
+    if(mi<0)throw new Error(`${fname}: ไม่พบชื่อเดือนในเซลล์ A2`);
+    if(!fy)throw new Error(`${fname}: ไม่พบปีงบประมาณในเซลล์ A2`);
+    const hosp=cell(7,2);if(!hosp)throw new Error(`${fname}: ไม่พบชื่อโรงพยาบาลในเซลล์ C8`);
+    const rows={};
+    for(let r=9;r<a.length;r++){const code=cell(r,0);if(!isCode(code))continue;
+      rows[code]={name:cell(r,1),v:[num(a[r][2]),num(a[r][3]),num(a[r][4]),num(a[r][5])]};}
+    if(!Object.keys(rows).length)throw new Error(`${fname}: ไม่พบแถวรหัสบัญชีตั้งแต่แถว 10`);
+    return{hosp,hcode:cell(6,2),fy,months:{[mi]:rows}};
+  }
+  // แบบฟอร์มเดิม tb_report (12 เดือนในไฟล์เดียว, ชื่อ รพ. อยู่ A2)
+  const months={};
+  for(const r of a){const code=r&&r[0]!=null?String(r[0]).trim():'';if(!isCode(code))continue;
+    for(let i=0;i<12;i++){const o=2+i*4;const v=[num(r[o]),num(r[o+1]),num(r[o+2]),num(r[o+3])];
+      if(nz(v[1])||nz(v[2])||nz(v[0])||nz(v[3])){(months[i]=months[i]||{})[code]={name:String(r[1]??'').trim(),v};}}}
+  if(!Object.keys(months).length)throw new Error(`${fname}: ไม่รู้จักรูปแบบไฟล์ (ต้องมี CodeL6 ที่ A8 และชื่อโรงพยาบาลที่ C8)`);
+  const fy=parseInt((cell(0,0).match(/(25\d\d)/)||[])[1]||'0',10);
+  return{hosp:cell(1,0),hcode:'',fy,months};
+}
+function buildData(src){
+  const names={};
+  for(const rows of Object.values(src.months))for(const [c,o] of Object.entries(rows))if(!names[c])names[c]=o.name;
+  const codes=Object.keys(names).sort();
+  const rows=codes.map(c=>{const r=[c,names[c]];for(let i=0;i<12;i++){const o=src.months[i]&&src.months[i][c];r.push(...(o?o.v:[0,0,0,0]));}return r;});
+  return{a1:`ปีงบประมาณ ${src.fy}`,a2:src.hosp+(src.hcode?` (${src.hcode})`:''),rows,loaded:Object.keys(src.months).map(Number).sort((x,y)=>x-y)};
 }
 const msg=document.getElementById('filemsg');
+const readFile=f=>new Promise((ok,no)=>{const rd=new FileReader();rd.onload=()=>ok(rd.result);rd.onerror=()=>no(new Error(f.name+': เปิดไฟล์ไม่ได้'));rd.readAsArrayBuffer(f);});
 document.getElementById('pick').onclick=()=>document.getElementById('file').click();
-document.getElementById('file').onchange=e=>{const f=e.target.files[0];if(!f)return;
+document.getElementById('file').onchange=async e=>{const files=[...e.target.files];e.target.value='';if(!files.length)return;
   if(typeof XLSX==='undefined'){msg.className='filemsg err';msg.textContent='โหลดตัวอ่าน Excel ไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง';return;}
-  const rd=new FileReader();rd.onload=()=>{try{const wb=XLSX.read(new Uint8Array(rd.result),{type:'array'});load(parseSheet(wb));
-      msg.className='filemsg';msg.textContent='ข้อมูลที่แสดง: '+f.name;document.getElementById('reset').hidden=false;}
-    catch(err){msg.className='filemsg err';msg.textContent='อ่านไฟล์ไม่ได้: '+err.message+' (ใช้ไฟล์ tb_report จากระบบรายงานงบทดลอง)';}};
-  rd.readAsArrayBuffer(f);e.target.value='';};
-document.getElementById('reset').onclick=()=>{load(DEFAULT);msg.className='filemsg';msg.textContent='ข้อมูลที่แสดง: tb_report_2569_11183.xlsx';document.getElementById('reset').hidden=true;};
+  try{
+    const parsed=[];
+    for(const f of files){const buf=await readFile(f);parsed.push(parseFile(XLSX.read(new Uint8Array(buf),{type:'array'}),f.name));}
+    const h0=parsed[0];
+    for(const p of parsed)if(p.hosp!==h0.hosp||p.fy!==h0.fy)throw new Error(`ไฟล์ที่เลือกมีหลายโรงพยาบาลหรือหลายปีงบ (${h0.hosp} ${h0.fy} กับ ${p.hosp} ${p.fy}) กรุณาเลือกครั้งละ 1 โรงพยาบาล 1 ปีงบ`);
+    // ถ้าเป็นโรงพยาบาลและปีงบเดียวกับที่นำเข้าไว้แล้ว ให้เพิ่มเดือนเข้าไป
+    const base=SRC&&SRC.hosp===h0.hosp&&SRC.fy===h0.fy?SRC:{hosp:h0.hosp,hcode:h0.hcode,fy:h0.fy,months:{}};
+    for(const p of parsed)Object.assign(base.months,p.months);
+    SRC=base;load(buildData(SRC));
+    const n=Object.keys(SRC.months).length;
+    msg.className='filemsg';msg.textContent=`นำเข้าแล้ว ${n} เดือน: ${SRC.hosp} · เลือกไฟล์เดือนอื่นของโรงพยาบาลเดียวกันเพื่อเพิ่มเดือนได้`;
+    document.getElementById('reset').hidden=false;
+  }catch(err){msg.className='filemsg err';msg.textContent='อ่านไฟล์ไม่ได้: '+err.message;}
+};
+document.getElementById('reset').onclick=()=>{SRC=null;load(DEFAULT);msg.className='filemsg';msg.textContent='ข้อมูลตัวอย่าง: โรงพยาบาลสองแคว ต.ค.–ก.ย. · เลือกไฟล์ financial_report รายเดือนได้หลายไฟล์พร้อมกัน';document.getElementById('reset').hidden=true;};
 ['tAP','tINV'].forEach(id=>document.getElementById(id).oninput=render);
 load(DEFAULT);
 </script>
