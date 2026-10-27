@@ -142,7 +142,7 @@ footer a{color:var(--accent)}
       <span class="target">ช่วงปกติ 50%–150% ของค่าเฉลี่ย</span>
     </div>
     <div class="cards" id="bandCards"></div>
-    <p class="note">ค่าเฉลี่ยของแต่ละเดือนคำนวณจากเดือนอื่นที่มีข้อมูลในปีงบเดียวกัน (ไม่นับเดือนที่ตรวจ เพื่อไม่ให้ยอดผิดปกติดึงค่าเฉลี่ยของตัวเอง). รายจ่ายใช้ เดบิต − เครดิต ของเดือน, เจ้าหนี้ใช้ยอดตั้งหนี้ (เครดิต) ของเดือน. แถบสีอ่อนคือช่วงปกติของเดือนที่เลือก</p>
+    <p class="note">ยอดปกติ (เฉลี่ยต่อเดือน) = ยอดยกไปสะสมตั้งแต่ต้นปีงบ ÷ จำนวนเดือนที่ผ่านไป (ต.ค. = 1 … ก.ย. = 12) จึงคำนวณได้จากไฟล์เดือนเดียว. รายจ่ายเทียบยอดเดือนนี้ (เดบิต − เครดิต) กับยอดยกไปของบัญชีนั้นเอง. เจ้าหนี้เป็นบัญชีคงเหลือ ยอดยกไปไม่ใช่ยอดสะสม จึงเทียบยอดตั้งหนี้เดือนนี้ (เครดิต) กับยอดใช้ไปเฉลี่ยต่อเดือนของหมวดเดียวกัน (เจ้าหนี้ยา ↔ ยาใช้ไป, เจ้าหนี้วัสดุวิทยาศาสตร์ฯ ↔ วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป). แถบสีอ่อนคือช่วงปกติของเดือนที่เลือก</p>
   </section>
 
   <section id="sec-chk">
@@ -180,14 +180,14 @@ const INV=[
  {t:'วัสดุวิทยาศาสตร์และการแพทย์',inv:'1105010103.105',use:'5104030205.104'},
  {t:'วัสดุการแพทย์ทั่วไป',inv:'1105010103.104',use:'5104030205.103'},
 ];
-// ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ยเดือนอื่นที่มีข้อมูล; mode exp = เดบิต−เครดิต, cr = ยอดตั้งหนี้ (เครดิต)
+// ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของยอดเฉลี่ยต่อเดือน (ยอดยกไปสะสม ÷ จำนวนเดือนที่ผ่านไป); mode exp = เดบิต−เครดิต, cr = ยอดตั้งหนี้ (เครดิต)
 const BAND_LO=0.5, BAND_HI=1.5;
 const BAND=[
  {g:'รายจ่ายประจำ: ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย',mode:'exp',code:'5104030205.101',name:'ยาใช้ไป'},
  {g:'รายจ่ายประจำ: ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย',mode:'exp',code:'5104030205.104',name:'วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป'},
  {g:'รายจ่ายประจำ: ยอดรายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย',mode:'exp',code:'5104010110.101',name:'ค่าเชื้อเพลิง'},
- {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.134',name:'เจ้าหนี้ - ยา'},
- {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.136',name:'เจ้าหนี้ - วัสดุวิทยาศาสตร์และการแพทย์'},
+ {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.134',name:'เจ้าหนี้ - ยา',base:'5104030205.101',baseName:'ยาใช้ไป'},
+ {g:'เจ้าหนี้: ยอดตั้งหนี้รายเดือนต้องอยู่ระหว่าง 50%–150% ของค่าเฉลี่ย (รับรู้หนี้ล่าช้า / ซ้ำซ้อน)',mode:'cr',code:'2101020199.136',name:'เจ้าหนี้ - วัสดุวิทยาศาสตร์และการแพทย์',base:'5104030205.104',baseName:'วัสดุวิทยาศาสตร์และการแพทย์ใช้ไป'},
 ];
 const AP=[
  {t:'เจ้าหนี้ - ยา',ap:'2101020199.134'},
@@ -269,9 +269,10 @@ function runChecks(){
 }
 
 function bandSeries(B){
-  const amt=MONTHS.map((_,i)=>{if(!ACTIVE[i])return null;const x=m(B.code,i);if(!x)return null;return B.mode==='exp'?x.dr-x.cr:x.cr;});
-  return amt.map((v,i)=>{if(v==null)return null;
-    const oth=amt.filter((w,j)=>j!==i&&w!=null);const avg=oth.length?oth.reduce((a,b)=>a+b,0)/oth.length:null;
+  // ยอดปกติ = ยอดยกไปสะสมของบัญชีฐาน ÷ จำนวนเดือนที่ผ่านไปในปีงบ
+  return MONTHS.map((_,i)=>{if(!ACTIVE[i])return null;const x=m(B.code,i);if(!x)return null;
+    const v=B.mode==='exp'?x.dr-x.cr:x.cr;
+    const b=m(B.base||B.code,i);const avg=b?b.cf/(i+1):null;
     const pct=avg&&avg>EPS?v/avg:null;return{v,avg,pct};});
 }
 function failsIn(i){let n=0;for(const it of CHK){const r=it.res[i];if(r&&!r.ok)n+=it.agg?r.bad.length:1;}return n;}
@@ -375,12 +376,12 @@ function render(){
      ${spark(s,tINV)}
      <div class="codes">${c.inv} คงคลัง<br>${c.use} ใช้ไป</div></article>`;}).join('');
 
-  document.getElementById('bandCards').innerHTML=(ACTIVE.filter(Boolean).length<2?`<div class="note" style="grid-column:1/-1;background:var(--warn-bg);color:var(--warn);padding:8px 12px;border-radius:6px">ต้องมีข้อมูลอย่างน้อย 2 เดือนจึงจะหาค่าเฉลี่ยได้ นำเข้าไฟล์เดือนอื่นของโรงพยาบาลเดียวกันเพิ่มได้ (ควรมีหลายเดือนเพื่อให้ค่าเฉลี่ยเชื่อถือได้)</div>`:'')+BAND.map(B=>{const s=bandSeries(B);const p=s[SEL];
+  document.getElementById('bandCards').innerHTML=BAND.map(B=>{const s=bandSeries(B);const p=s[SEL];
     const lv=!p||p.pct==null?'na':(p.pct>=BAND_LO&&p.pct<=BAND_HI?'ok':'far');
     const lab=!p||p.pct==null?'คำนวณไม่ได้':lv==='ok'?'ปกติ':(p.pct>BAND_HI?'สูงผิดปกติ':'ต่ำผิดปกติ');
-    return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(B.name)}${B.mode==='cr'?'<br><span class="sub" style="font-weight:400;font-size:12px">ยอดตั้งหนี้ (เครดิต)</span>':''}</span><span class="pill ${lv}">${lab}</span></div>
+    return `<article class="card ${lv}"><div style="display:flex;gap:8px;align-items:flex-start"><span class="t">${esc(B.name)}${B.mode==='cr'?`<br><span class="sub" style="font-weight:400;font-size:12px">ยอดตั้งหนี้ (เครดิต) เทียบ${B.baseName}เฉลี่ย</span>`:''}</span><span class="pill ${lv}">${lab}</span></div>
      <div class="big"><span class="num">${p&&p.pct!=null?fmt(p.pct*100,0):'—'}</span><span class="u">% ของค่าเฉลี่ย</span></div>
-     <dl class="kv"><dt>เดือนนี้</dt><dd>${fmt(p?p.v:null)}</dd><dt>เฉลี่ยเดือนอื่น</dt><dd>${fmt(p?p.avg:null)}</dd></dl>
+     <dl class="kv"><dt>เดือนนี้</dt><dd>${fmt(p?p.v:null)}</dd><dt>${B.base?'ใช้ไปเฉลี่ย/เดือน':'เฉลี่ย/เดือน'}</dt><dd>${fmt(p?p.avg:null)}</dd></dl>
      ${bars(s)}
      <div class="codes">${B.code}</div></article>`;}).join('');
 
@@ -391,7 +392,7 @@ function render(){
     else iss.push({g:it.g,code:it.code,name:it.name,why:r.why,x:r.x,band:r.band});}
   document.getElementById('chkSub').textContent=`${MONTHS_FULL[SEL]}: ${iss.length?iss.length+' รายการไม่ผ่าน':'ผ่านทุกเงื่อนไข'}`;
   document.getElementById('issues').innerHTML=iss.length?iss.map(o=>`<div class="issue"><div><div class="why">${esc(o.why)}</div><div>${esc(o.name)} <span class="num" style="color:var(--muted);font-size:12px">${o.code}</span></div><div class="sub" style="font-size:12px">${esc(o.g)}</div></div>
-     <div class="vals">${o.band?`เดือนนี้ ${fmt(o.band.v)}<br>เฉลี่ยเดือนอื่น ${fmt(o.band.avg)}<br>ช่วงปกติ ${fmt(o.band.avg*BAND_LO,0)} – ${fmt(o.band.avg*BAND_HI,0)}`:o.x?`ยกมา ${fmt(o.x.bf)}<br>Dr ${fmt(o.x.dr)} · Cr ${fmt(o.x.cr)}<br>ยกไป ${fmt(o.x.cf)}`:'—'}</div></div>`).join('')
+     <div class="vals">${o.band?`เดือนนี้ ${fmt(o.band.v)}<br>เฉลี่ย/เดือน ${fmt(o.band.avg)}<br>ช่วงปกติ ${fmt(o.band.avg*BAND_LO,0)} – ${fmt(o.band.avg*BAND_HI,0)}`:o.x?`ยกมา ${fmt(o.x.bf)}<br>Dr ${fmt(o.x.dr)} · Cr ${fmt(o.x.cr)}<br>ยกไป ${fmt(o.x.cf)}`:'—'}</div></div>`).join('')
     :`<div class="allpass">${MONTHS_FULL[SEL]}: ผ่านทุกเงื่อนไขที่กำหนด</div>`;
 
   // matrix
